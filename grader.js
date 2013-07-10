@@ -22,6 +22,7 @@ References:
 */
 
 var fs = require('fs');
+var util = require('util');
 var program = require('commander');
 var cheerio = require('cheerio');
 var rest = require('restler');
@@ -37,23 +38,37 @@ var assertFileExists = function(infile) {
     return instr;
 };
 
-var cheerioHtmlFile = function(htmlfile) {
-    return cheerio.load(fs.readFileSync(htmlfile));
-};
-
 var loadChecks = function(checksfile) {
     return JSON.parse(fs.readFileSync(checksfile));
 };
 
-var checkHtmlFile = function(htmlfile, checksfile) {
-    $ = cheerioHtmlFile(htmlfile);
-    var checks = loadChecks(checksfile).sort();
+var checkHtml = function(html, checks) {
+    $ = cheerio.load(html);
     var out = {};
     for(var ii in checks) {
         var present = $(checks[ii]).length > 0;
         out[checks[ii]] = present;
     }
     return out;
+};
+
+var checkHtmlFile = function(htmlfile, checks) {
+    return checkHtml(fs.readFileSync(htmlfile), checks);
+}
+
+var logJson = function(json) {
+    var outJson = JSON.stringify(json, null, 4);
+    console.log(outJson);
+}
+
+var checkHtmlURL = function(url, checks) {
+    rest.get(url).on('complete', function(result) {
+        if (result instanceof Error) {
+            console.error('Error: ' + util.format(result.message));
+        } else {
+            logJson(checkHtml(result, checks));
+        }
+    });
 };
 
 var clone = function(fn) {
@@ -65,11 +80,19 @@ var clone = function(fn) {
 if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
-        .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
+        .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists))
+        .option('-u, --url <url>', 'URL to check')
         .parse(process.argv);
-    var checkJson = checkHtmlFile(program.file, program.checks);
-    var outJson = JSON.stringify(checkJson, null, 4);
-    console.log(outJson);
+
+    var checks = loadChecks(program.checks).sort();
+    if (program.file) {
+        logJson(checkHtmlFile(program.file, checks));
+    } else if (program.url) {
+        checkHtmlURL(program.url, checks);
+    } else {
+        console.error("Need either --file or --url.");
+        process.exit(1);
+    }
 } else {
     exports.checkHtmlFile = checkHtmlFile;
 }
