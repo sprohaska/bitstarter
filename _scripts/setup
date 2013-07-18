@@ -3,3 +3,4 @@
 npm install cheerio
 npm install commander
 npm install restler
+npm install express
