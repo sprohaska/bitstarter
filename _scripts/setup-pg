@@ -6,7 +6,6 @@ main() {
     havePG || heroku addons:add $app heroku-postgresql:dev
     requireSinglePG
     heroku pg:promote $app $(heroku config $app | grep HEROKU_POSTGRESQL | cut -f1 -d':')
-    heroku plugins:install $app git://github.com/ddollar/heroku-config.git
 }
 
 havePG() {
