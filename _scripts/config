@@ -1,0 +1,26 @@
+#!/bin/bash
+
+case "$0" in *config)
+    echo "Error: use 'source' to run this script." >&2
+    exit 1
+    ;;
+esac
+
+case $(git branch | grep '^\*' | cut -b 3-) in
+    staging)
+        TOOLS_APP=sprohaska-bitstarter-s-mooc
+        ;;
+    master)
+        TOOLS_APP=sprohaska-bitstarter-mooc
+        ;;
+    *)
+        echo "Error: don't know which config to choose for current branch."
+        return 1
+esac
+
+for e in \
+    TOOLS_APP \
+    ; do
+    export $e
+    echo export $e=${!e}
+done

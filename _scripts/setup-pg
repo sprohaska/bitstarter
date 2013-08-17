@@ -1,11 +1,17 @@
 #!/bin/bash
 
-app="--app sprohaska-bitstarter-s-mooc"
+set -o nounset
+set -o errexit
+set -o noglob
+set -o pipefail
+
+app="--app ${TOOLS_APP}"
 
 main() {
     havePG || heroku addons:add $app heroku-postgresql:dev
     requireSinglePG
     heroku pg:promote $app $(heroku config $app | grep HEROKU_POSTGRESQL | cut -f1 -d':')
+    heroku config $app
 }
 
 havePG() {

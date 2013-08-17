@@ -1,9 +1,17 @@
 #!/bin/bash
 
-app="--app sprohaska-bitstarter-s-mooc"
+set -o nounset
+set -o errexit
+set -o noglob
+set -o pipefail
+
+app="--app ${TOOLS_APP}"
 
 main() {
-    haveCB && return 0
+    getCBKey && {
+        echo "The Coinbase API key is already configured (see above)."
+        return 0
+    }
 
     cat <<EOF
 Setup your Coinbase API key by running:
@@ -13,8 +21,9 @@ Setup your Coinbase API key by running:
 EOF
 }
 
-haveCB() {
-    heroku config $app | grep -q COINBASE_API_KEY
+getCBKey() {
+    cfg="$(heroku config $app)"
+    grep COINBASE_API_KEY <<<"${cfg}"
 }
 
 die() {
