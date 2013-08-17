@@ -1,0 +1,25 @@
+#!/bin/bash
+
+app="--app sprohaska-bitstarter-s-mooc"
+
+main() {
+    haveCB && return 0
+
+    cat <<EOF
+Setup your Coinbase API key by running:
+
+    heroku config:set $app COINBASE_API_KEY=<your-key>
+
+EOF
+}
+
+haveCB() {
+    heroku config $app | grep -q COINBASE_API_KEY
+}
+
+die() {
+    printf 'Error: %s\n' "$1"
+    exit 1
+}
+
+main "$@"
