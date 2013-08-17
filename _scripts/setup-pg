@@ -1,0 +1,27 @@
+#!/bin/bash
+
+app="--app sprohaska-bitstarter-s-mooc"
+
+main() {
+    havePG || heroku addons:add $app heroku-postgresql:dev
+    requireSinglePG
+    heroku pg:promote $app $(heroku config $app | grep HEROKU_POSTGRESQL | cut -f1 -d':')
+    heroku plugins:install $app git://github.com/ddollar/heroku-config.git
+}
+
+havePG() {
+    heroku config $app | grep -q HEROKU_POSTGRESQL
+}
+
+requireSinglePG() {
+    local n=$(heroku config $app | grep HEROKU_POSTGRESQL | wc -l)
+    (( $n == 1 )) ||
+        die "Require a single HEROKU_POSTGRESQL db (found $n)."
+}
+
+die() {
+    printf 'Error: %s\n' "$1"
+    exit 1
+}
+
+main "$@"
